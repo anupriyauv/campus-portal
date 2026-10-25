@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 from .models import Event, EventPhoto, EventResult, EventAnnouncement
 from apps.clubs.models import Club
 
@@ -63,7 +64,10 @@ class EventForm(forms.ModelForm):
         # Filter clubs based on user role
         if user:
             if user.is_coordinator():
-                self.fields['club'].queryset = Club.objects.filter(coordinator=user)
+                self.fields['club'].queryset = Club.objects.filter(
+                    Q(coordinator=user) | Q(members=user),
+                    is_active=True
+                ).order_by('name').distinct()
             elif not user.is_admin():
                 self.fields['club'].queryset = Club.objects.none()
     

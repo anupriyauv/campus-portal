@@ -3,8 +3,8 @@ Django==4.2.7
 django-environ==0.11.2
 
 # Database
-psycopg2-binary==2.9.9  # For PostgreSQL
-mysqlclient==2.2.0      # For MySQL (optional)
+psycopg[binary]  # For PostgreSQL (supports Python 3.12+ and Windows)
+mysqlclient==2.2.0; sys_platform != "win32"  # For MySQL (optional; skip on Windows)
 
 # Forms & UI
 django-crispy-forms==2.5
@@ -18,7 +18,7 @@ django-allauth==0.57.0
 djangorestframework==3.14.0
 
 # File Handling
-Pillow==10.1.0
+Pillow
 
 # Task Queue (for async notifications)
 celery==5.3.4
