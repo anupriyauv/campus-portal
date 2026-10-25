@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Campus Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        border: none;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .stat-card.success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+    
+    .stat-card.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    .stat-card.info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .recent-user {
+        transition: background-color 0.2s ease;
+    }
+    
+    .recent-user:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Welcome back, {{ user.first_name }}!
+                </h1>
+                <p class="mb-0">System Administrator Dashboard</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                     alt="Profile" 
+                     class="rounded-circle" 
+                     width="80" 
+                     height="80"
+                     style="border: 3px solid white;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Statistics Cards -->
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_users }}</div>
+                        <p class="mb-0">Total Users</p>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_clubs }}</div>
+                        <p class="mb-0">Active Clubs</p>
+                    </div>
+                    <i class="fas fa-landmark fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_events }}</div>
+                        <p class="mb-0">Total Events</p>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ active_events }}</div>
+                        <p class="mb-0">Active Events</p>
+                    </div>
+                    <i class="fas fa-clock fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- Quick Actions -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'admin:index' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-cog me-2"></i>Admin Panel
+                    </a>
+                    <a href="{% url 'clubs:club_create' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-plus-circle me-2"></i>Create Club
+                    </a>
+                    <a href="{% url 'clubs:club_list' %}" class="btn btn-outline-success w-100 mb-2">
+                        <i class="fas fa-landmark me-2"></i>Manage Clubs
+                    </a>
+                    <a href="{% url 'events:event_list' %}" class="btn btn-outline-info w-100 mb-2">
+                        <i class="fas fa-calendar me-2"></i>Manage Events
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-warning w-100">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Event Statistics -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2 text-info"></i>Event Statistics</h5>
+                </div>
+                <div class="card-body">
+                    {% for stat in event_stats %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ stat.status }}</span>
+                        <span class="badge bg-primary">{{ stat.count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Users -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2 text-success"></i>Recent Registrations</h5>
+                </div>
+                <div class="card-body">
+                    {% for user in recent_users %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom recent-user">
+                        <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                             alt="{{ user.get_full_name }}" 
+                             class="rounded-circle me-3" 
+                             width="40" 
+                             height="40">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ user.get_full_name }}</h6>
+                            <small class="text-muted">{{ user.email }}</small>
+                        </div>
+                        <small class="text-muted">{{ user.date_joined|timesince }} ago</small>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No recent users</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Overview -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-server me-2 text-warning"></i>System Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>System Status</span>
+                        <span class="badge bg-success">Operational</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Database</span>
+                        <span class="badge bg-success">Connected</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Storage</span>
+                        <span class="badge bg-info">75%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Last Backup</span>
+                        <small class="text-muted">2 hours ago</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2 text-primary"></i>Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Admin Users</span>
+                        <span class="badge bg-danger">{{ total_users|add:"-10" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Coordinators</span>
+                        <span class="badge bg-warning">{{ total_users|add:"-50" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Students</span>
+                        <span class="badge bg-success">{{ total_users|add:"-100" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<div class="col-md-3 mb-4">
+                    <div class="card text-white bg-success o-hidden h-100">
+                        <div class="card-body">
+                            <div class="card-body-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="mr-5">{{ total_clubs }} Total Clubs</div>
+                        </div>
+                        <a class="card-footer text-white clearfix small z-1" href="{% url 'club_list' %}">
+                            <span class="float-left">View Details</span>
+                            <span class="float-right">
+                                <i class="fas fa-angle-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card text-white bg-danger o-hidden h-100">
+                        <div class="card-body">
+                            <div class="card-body-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="mr-5">{{ total_events }} Total Events</div>
+                        </div>
+                        <a class="card-footer text-white clearfix small z-1" href="{% url 'event_list' %}">
+                            <span class="float-left">View Details</span>
+                            <span class="float-right">
+                                <i class="fas fa-angle-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Clubs Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-table mr-1"></i>
+                    All Clubs
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="allClubsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Coordinator</th>
+                                    <th>Email</th>
+                                    <th>Website</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for club in all_clubs %}
+                                <tr>
+                                    <td>{{ club.name }}</td>
+                                    <td>{{ club.category }}</td>
+                                    <td>{{ club.coordinator.get_full_name|default:club.coordinator.username }}</td>
+                                    <td>{{ club.email }}</td>
+                                    <td><a href="{{ club.website }}" target="_blank">{{ club.website }}</a></td>
+                                    <td>
+                                        <a href="{% url 'club_detail' club.slug %}" class="btn btn-info btn-sm">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Events Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-table mr-1"></i>
+                    All Events
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="allEventsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Club</th>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in all_events %}
+                                <tr>
+                                    <td>{{ event.title }}</td>
+                                    <td>{{ event.club.name }}</td>
+                                    <td>{{ event.date }}</td>
+                                    <td>{{ event.location }}</td>
+                                    <td>{{ event.status }}</td>
+                                    <td>
+                                        <a href="{% url 'event_detail' event.slug %}" class="btn btn-info btn-sm">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>

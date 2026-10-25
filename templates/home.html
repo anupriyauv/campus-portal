@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Campus Event Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 100px 0;
+        margin-top: -20px;
+    }
+    
+    .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: #667eea;
+    }
+    
+    .stats-section {
+        background: #f8f9fa;
+        padding: 60px 0;
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 30px;
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-3 fw-bold mb-4">Welcome to Campus Event Portal</h1>
+        <p class="lead mb-5">Discover, Join, and Manage Campus Events & Clubs</p>
+        <div class="d-flex justify-content-center gap-3">
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:dashboard' %}" class="btn btn-light btn-lg">Go to Dashboard</a>
+            {% else %}
+                <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg">Get Started</a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg">Login</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">Why Choose Our Platform?</h2>
+            <p class="text-muted">Everything you need for campus activities in one place</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-calendar-alt feature-icon"></i>
+                        <h4 class="card-title">Event Management</h4>
+                        <p class="card-text text-muted">
+                            Create, manage, and track all campus events with ease. 
+                            Automated registrations and real-time updates.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-users feature-icon"></i>
+                        <h4 class="card-title">Club Activities</h4>
+                        <p class="card-text text-muted">
+                            Join clubs, participate in activities, and connect 
+                            with like-minded students across campus.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-bell feature-icon"></i>
+                        <h4 class="card-title">Smart Notifications</h4>
+                        <p class="card-text text-muted">
+                            Never miss an event. Get instant notifications about 
+                            events, registrations, and important updates.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 stat-box">
+                <div class="stat-number">500+</div>
+                <p class="text-muted">Active Students</p>
+            </div>
+            <div class="col-md-3 stat-box">
+                <div class="stat-number">50+</div>
+                <p class="text-muted">Clubs & Organizations</p>
+            </div>
+            <div class="col-md-3 stat-box">
+                <div class="stat-number">200+</div>
+                <p class="text-muted">Events Organized</p>
+            </div>
+            <div class="col-md-3 stat-box">
+                <div class="stat-number">95%</div>
+                <p class="text-muted">Satisfaction Rate</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="display-4 fw-bold mb-4">Ready to Get Started?</h2>
+        <p class="lead mb-4">Join thousands of students making the most of their campus life</p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg">
+            <i class="fas fa-user-plus me-2"></i>Create Account
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

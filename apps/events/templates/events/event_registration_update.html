@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update Registration Status{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Update Registration Status for {{ registration.user.get_full_name|default:registration.user.username }}</h2>
+            <p>Event: <a href="{% url 'events:event_detail' slug=registration.event.slug %}">{{ registration.event.title }}</a></p>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary">Update Status</button>
+                <a href="{% url 'events:event_registration_list' slug=registration.event.slug %}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <img src="{{ event.banner.url }}" class="card-img-top" alt="{{ event.title }} Banner">
+                <div class="card-body">
+                    <h1 class="card-title">{{ event.title }}</h1>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-calendar-alt"></i> {{ event.start_datetime|date:"M d, Y H:i" }} - {{ event.end_datetime|date:"M d, Y H:i" }}
+                        <br>
+                        <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                        <br>
+                        <i class="fas fa-users"></i> Organized by <a href="#">{{ event.club.name }}</a>
+                    </p>
+                    <hr>
+                    <p class="card-text">{{ event.description|linebreaksbr }}</p>
+
+                    {% if request.user.is_authenticated and request.user.is_student %}
+                        {% if event.is_registration_open %}
+                            {% if is_registered %}
+                                <div class="alert alert-success" role="alert">
+                                    You are registered for this event.
+                                    <form action="{% url 'events:cancel_registration' slug=event.slug %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm ml-2">Cancel Registration</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <form action="{% url 'events:register_event' slug=event.slug %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary">Register for Event</button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-warning" role="alert">
+                                Registration for this event is currently closed or full.
+                            </div>
+                        {% endif %}
+                    {% elif request.user.is_authenticated and request.user.is_coordinator_or_admin %}
+                        <div class="mt-3">
+                            <a href="{% url 'events:event_update' slug=event.slug %}" class="btn btn-info btn-sm">Edit Event</a>
+                            <a href="{% url 'events:event_registration_list' slug=event.slug %}" class="btn btn-secondary btn-sm">Manage Registrations</a>
+                            <a href="{% url 'events:upload_event_photos' slug=event.slug %}" class="btn btn-secondary btn-sm">Upload Photos</a>
+                            <a href="{% url 'events:add_event_results' slug=event.slug %}" class="btn btn-secondary btn-sm">Add Results</a>
+                            <a href="{% url 'events:add_event_announcement' slug=event.slug %}" class="btn btn-secondary btn-sm">Add Announcement</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Announcements Section -->
+            {% if announcements %}
+            <div class="card mb-4">
+                <div class="card-header">Announcements</div>
+                <div class="list-group list-group-flush">
+                    {% for announcement in announcements %}
+                    <div class="list-group-item">
+                        <h5 class="mb-1">{{ announcement.title }}</h5>
+                        <p class="mb-1">{{ announcement.content|linebreaksbr }}</p>
+                        <small class="text-muted">{{ announcement.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Photos Section -->
+            {% if photos %}
+            <div class="card mb-4">
+                <div class="card-header">Event Photos</div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for photo in photos %}
+                        <div class="col-md-4 mb-3">
+                            <img src="{{ photo.image.url }}" class="img-fluid rounded" alt="Event Photo">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Results Section -->
+            {% if results %}
+            <div class="card mb-4">
+                <div class="card-header">Event Results</div>
+                <ul class="list-group list-group-flush">
+                    {% for result in results %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ result.position }}. {{ result.participant.get_full_name|default:result.participant.username }}</span>
+                        <span class="badge badge-primary badge-pill">{{ result.score }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Similar Events Sidebar -->
+            {% if similar_events %}
+            <div class="card">
+                <div class="card-header">Similar Events</div>
+                <div class="list-group list-group-flush">
+                    {% for similar_event in similar_events %}
+                    <a href="{% url 'events:event_detail' slug=similar_event.slug %}" class="list-group-item list-group-item-action">
+                        <h5 class="mb-1">{{ similar_event.title }}</h5>
+                        <p class="mb-1 text-muted">{{ similar_event.start_datetime|date:"M d, Y" }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

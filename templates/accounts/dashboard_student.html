@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard - Campus Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        border: none;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .stat-card.success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+    
+    .stat-card.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    .stat-card.info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .notification-badge {
+        position: relative;
+    }
+    
+    .notification-badge .badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+    }
+    
+    .quick-action-btn {
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-action-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .event-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .event-timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -24px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #667eea;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Welcome back, {{ user.first_name }}!
+                </h1>
+                <p class="mb-0">{{ user.department }} - Semester {{ user.semester }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                     alt="Profile" 
+                     class="rounded-circle" 
+                     width="80" 
+                     height="80"
+                     style="border: 3px solid white;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Statistics Cards -->
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ my_clubs.count }}</div>
+                        <p class="mb-0">My Clubs</p>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ my_events.count }}</div>
+                        <p class="mb-0">Registered Events</p>
+                    </div>
+                    <i class="fas fa-calendar-check fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ upcoming_events.count }}</div>
+                        <p class="mb-0">Upcoming Events</p>
+                    </div>
+                    <i class="fas fa-clock fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card info">
+                <div class="d-flex justify-content-between align-items-center notification-badge">
+                    <div>
+                        <div class="stat-number">{{ unread_notifications.count }}</div>
+                        <p class="mb-0">Notifications</p>
+                    </div>
+                    <i class="fas fa-bell fa-3x opacity-50"></i>
+                    {% if unread_notifications.count > 0 %}
+                    <span class="badge bg-danger">{{ unread_notifications.count }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- Quick Actions -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'events:event_list' %}" class="btn btn-outline-primary w-100 quick-action-btn">
+                        <i class="fas fa-calendar-alt me-2"></i>Browse Events
+                    </a>
+                    <a href="{% url 'clubs:club_list' %}" class="btn btn-outline-success w-100 quick-action-btn">
+                        <i class="fas fa-users me-2"></i>Explore Clubs
+                    </a>
+                    <a href="{% url 'events:event_calendar' %}" class="btn btn-outline-info w-100 quick-action-btn">
+                        <i class="fas fa-calendar me-2"></i>View Calendar
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-warning w-100 quick-action-btn">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Suggested Clubs -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-star me-2 text-warning"></i>Suggested Clubs</h5>
+                </div>
+                <div class="card-body">
+                    {% for club in suggested_clubs %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <img src="{% if club.logo %}{{ club.logo.url }}{% else %}{% static 'images/default-club.png' %}{% endif %}" 
+                             alt="{{ club.name }}" 
+                             class="rounded me-3" 
+                             width="50" 
+                             height="50">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ club.name }}</h6>
+                            <small class="text-muted">{{ club.get_member_count }} members</small>
+                        </div>
+                        <a href="{% url 'clubs:club_detail' club.slug %}" class="btn btn-sm btn-primary">
+                            View
+                        </a>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No suggestions at the moment</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- My Events -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2 text-success"></i>My Events</h5>
+                    <a href="{% url 'events:my_events' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="event-timeline">
+                        {% for registration in my_events %}
+                        <div class="timeline-item">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ registration.event.title }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ registration.event.start_datetime|date:"M d, Y - g:i A" }}
+                                    </small>
+                                    <br>
+                                    <span class="badge bg-{{ registration.status|lower }} mt-1">
+                                        {{ registration.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center">You haven't registered for any events yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upcoming Events & Notifications -->
+        <div class="col-md-4">
+            <!-- Upcoming Events -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-fire me-2 text-danger"></i>Upcoming Events</h5>
+                </div>
+                <div class="card-body">
+                    {% for event in upcoming_events|slice:":5" %}
+                    <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                        <h6 class="mb-1">
+                            <a href="{% url 'events:event_detail' event.slug %}" class="text-decoration-none">
+                                {{ event.title }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ event.start_datetime|date:"M d, Y" }}
+                        </small>
+                        <br>
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ event.venue }}
+                        </small>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No upcoming events</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Recent Notifications -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-bell me-2 text-info"></i>Notifications</h5>
+                    <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% for notif_recipient in unread_notifications %}
+                    <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="d-flex align-items-start">
+                            <div class="me-2">
+                                <i class="fas fa-circle text-primary" style="font-size: 0.5rem;"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ notif_recipient.notification.title }}</h6>
+                                <small class="text-muted">
+                                    {{ notif_recipient.notification.message|truncatewords:15 }}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    {{ notif_recipient.notification.created_at|timesince }} ago
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No new notifications</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh notification count every 30 seconds
+    setInterval(function() {
+        fetch('{% url "notifications:unread_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.querySelector('.notification-badge .badge');
+                if (badge) {
+                    badge.textContent = data.count;
+                    if (data.count === 0) {
+                        badge.classList.add('d-none');
+                    } else {
+                        badge.classList.remove('d-none');
+                    }
+                }
+            });
+    }, 30000);
+</script>
+{% endblock %}

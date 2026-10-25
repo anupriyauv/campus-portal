@@ -1,0 +1,442 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ event.title }} - Campus Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .event-banner {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        border-radius: 15px;
+    }
+    
+    .event-info-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 80px;
+    }
+    
+    .info-item {
+        padding: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-item i {
+        width: 30px;
+        color: #667eea;
+    }
+    
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+        border-radius: 20px;
+    }
+    
+    .photo-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .photo-item {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .photo-item:hover {
+        transform: scale(1.05);
+    }
+    
+    .photo-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .results-table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    .position-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .position-1 { background: #ffd700; color: #000; }
+    .position-2 { background: #c0c0c0; color: #000; }
+    .position-3 { background: #cd7f32; color: #fff; }
+    
+    .feedback-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        margin-bottom: 15px;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'events:event_list' %}">Events</a></li>
+            <li class="breadcrumb-item active">{{ event.title }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Event Banner -->
+            <img src="{% if event.banner %}{{ event.banner.url }}{% else %}{% static 'images/default-event.jpg' %}{% endif %}" 
+                 alt="{{ event.title }}" 
+                 class="event-banner mb-4">
+            
+            <!-- Event Title & Info -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h1 class="mb-2">{{ event.title }}</h1>
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-2">{{ event.get_event_type_display }}</span>
+                        <span class="status-badge bg-{{ event.status|lower }}">
+                            {{ event.get_status_display }}
+                        </span>
+                        {% if event.is_featured %}
+                        <span class="badge bg-warning text-dark ms-2">
+                            <i class="fas fa-star"></i> Featured
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if user.is_authenticated and user.is_coordinator or user.is_admin %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cog"></i> Manage
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'events:event_update' event.slug %}">
+                            <i class="fas fa-edit me-2"></i>Edit Event
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'events:upload_photos' event.slug %}">
+                            <i class="fas fa-camera me-2"></i>Upload Photos
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'events:add_results' event.slug %}">
+                            <i class="fas fa-trophy me-2"></i>Add Results
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'reports:event_report' event.slug %}">
+                            <i class="fas fa-chart-bar me-2"></i>View Report
+                        </a></li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Club Info -->
+            <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                <img src="{% if event.club.logo %}{{ event.club.logo.url }}{% else %}{% static 'images/default-club.png' %}{% endif %}" 
+                     alt="{{ event.club.name }}" 
+                     class="rounded me-3" 
+                     width="60" 
+                     height="60">
+                <div>
+                    <h6 class="mb-0">Organized by</h6>
+                    <a href="{% url 'clubs:club_detail' event.club.slug %}" class="text-decoration-none">
+                        <strong>{{ event.club.name }}</strong>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Event Description -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>About This Event</h4>
+                    <p class="text-muted" style="white-space: pre-line;">{{ event.description }}</p>
+                </div>
+            </div>
+            
+            <!-- Event Results -->
+            {% if results %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="mb-3"><i class="fas fa-trophy me-2 text-warning"></i>Results</h4>
+                    <div class="table-responsive">
+                        <table class="table results-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Position</th>
+                                    <th>Participant</th>
+                                    <th>Prize</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>
+                                        <span class="position-badge position-{{ result.position }}">
+                                            {{ result.position }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ result.participant.get_full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ result.participant.usn }}</small>
+                                    </td>
+                                    <td>{{ result.prize }}</td>
+                                    <td>{{ result.remarks|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Event Photos -->
+            {% if photos %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="mb-3"><i class="fas fa-images me-2 text-success"></i>Event Gallery</h4>
+                    <div class="photo-gallery">
+                        {% for photo in photos %}
+                        <div class="photo-item" data-bs-toggle="modal" data-bs-target="#photoModal{{ photo.id }}">
+                            <img src="{{ photo.image.url }}" alt="{{ photo.caption }}">
+                        </div>
+                        
+                        <!-- Photo Modal -->
+                        <div class="modal fade" id="photoModal{{ photo.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">{{ photo.caption }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <img src="{{ photo.image.url }}" class="w-100" alt="{{ photo.caption }}">
+                                        <p class="mt-3 text-muted">
+                                            Uploaded by {{ photo.uploaded_by.get_full_name }} • 
+                                            {{ photo.uploaded_at|date:"M d, Y" }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Similar Events -->
+            {% if similar_events %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3"><i class="fas fa-star me-2 text-info"></i>Similar Events</h4>
+                    <div class="row">
+                        {% for similar in similar_events %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <img src="{% if similar.banner %}{{ similar.banner.url }}{% else %}{% static 'images/default-event.jpg' %}{% endif %}" 
+                                     class="card-img-top" 
+                                     alt="{{ similar.title }}"
+                                     style="height: 150px; object-fit: cover;">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ similar.title|truncatewords:8 }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ similar.start_datetime|date:"M d, Y" }}
+                                    </small>
+                                    <br>
+                                    <a href="{% url 'events:event_detail' similar.slug %}" class="btn btn-sm btn-primary mt-2">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="event-info-card card">
+                <div class="card-body">
+                    <!-- Registration Status -->
+                    {% if user.is_authenticated %}
+                        {% if is_registered %}
+                        <div class="alert alert-success mb-3">
+                            <i class="fas fa-check-circle me-2"></i>
+                            You are registered for this event
+                            <br>
+                            <small>Status: <strong>{{ registration.get_status_display }}</strong></small>
+                        </div>
+                        
+                        {% if registration.status == 'CONFIRMED' %}
+                        <a href="{% url 'events:cancel_registration' event.slug %}" 
+                           class="btn btn-outline-danger w-100 mb-3"
+                           onclick="return confirm('Are you sure you want to cancel your registration?')">
+                            <i class="fas fa-times me-2"></i>Cancel Registration
+                        </a>
+                        {% endif %}
+                        
+                        {% if registration.attended and not event.feedbacks.filter(user=user).exists %}
+                        <a href="{% url 'feedback:submit_feedback' event.slug %}" class="btn btn-warning w-100 mb-3">
+                            <i class="fas fa-star me-2"></i>Submit Feedback
+                        </a>
+                        {% endif %}
+                        {% else %}
+                            {% if event.is_registration_open %}
+                            <a href="{% url 'events:register_event' event.slug %}" class="btn btn-primary w-100 mb-3 btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Register Now
+                            </a>
+                            {% else %}
+                            <button class="btn btn-secondary w-100 mb-3" disabled>
+                                <i class="fas fa-lock me-2"></i>Registration Closed
+                            </button>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                    <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary w-100 mb-3 btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login to Register
+                    </a>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <!-- Event Details -->
+                    <h5 class="mb-3">Event Details</h5>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <strong>Date & Time</strong>
+                        <br>
+                        <small class="text-muted">
+                            {{ event.start_datetime|date:"F d, Y" }}
+                            <br>
+                            {{ event.start_datetime|time:"g:i A" }} - {{ event.end_datetime|time:"g:i A" }}
+                        </small>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <strong>Venue</strong>
+                        <br>
+                        <small class="text-muted">{{ event.venue }}</small>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-clock"></i>
+                        <strong>Registration Deadline</strong>
+                        <br>
+                        <small class="text-muted">
+                            {{ event.registration_deadline|date:"F d, Y - g:i A" }}
+                        </small>
+                    </div>
+                    
+                    {% if event.max_participants %}
+                    <div class="info-item">
+                        <i class="fas fa-users"></i>
+                        <strong>Participants</strong>
+                        <br>
+                        <small class="text-muted">
+                            {{ event.get_participant_count }} / {{ event.max_participants }}
+                        </small>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: {% widthratio event.get_participant_count event.max_participants 100 %}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if event.registration_fee > 0 %}
+                    <div class="info-item">
+                        <i class="fas fa-rupee-sign"></i>
+                        <strong>Registration Fee</strong>
+                        <br>
+                        <small class="text-muted">₹{{ event.registration_fee }}</small>
+                    </div>
+                    {% else %}
+                    <div class="info-item">
+                        <i class="fas fa-gift"></i>
+                        <strong>Registration</strong>
+                        <br>
+                        <small class="text-success"><strong>FREE</strong></small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="info-item">
+                        <i class="fas fa-user"></i>
+                        <strong>Organizer</strong>
+                        <br>
+                        <small class="text-muted">{{ event.organizer.get_full_name }}</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Share Buttons -->
+                    <h6 class="mb-3">Share this event</h6>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm flex-fill" title="Share on Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm flex-fill" title="Share on Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-success btn-sm flex-fill" title="Share on WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary btn-sm flex-fill" title="Copy Link">
+                            <i class="fas fa-link"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Copy link functionality
+    document.querySelector('a[title="Copy Link"]').addEventListener('click', function(e) {
+        e.preventDefault();
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+    });
+</script>
+{% endblock %}

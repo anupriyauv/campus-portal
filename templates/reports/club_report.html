@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load report_filters %}
+
+{% block title %}Club Report - {{ club.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        border: none;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .stat-card.success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+    
+    .stat-card.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    .stat-card.info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .chart-container {
+        height: 300px;
+        margin-bottom: 30px;
+    }
+    
+    .member-table th {
+        background-color: #f8f9fa;
+    }
+    
+    .member-table tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .progress {
+        height: 10px;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Report Header -->
+<div class="report-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-landmark me-2"></i>
+                    {{ club.name }} Report
+                </h1>
+                <p class="mb-0">Detailed analytics and statistics</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if club.logo %}
+                <img src="{{ club.logo.url }}" alt="{{ club.name }}" class="rounded-circle" width="80" height="80" style="border: 3px solid white;">
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Overview Statistics -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-card primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_members }}</div>
+                        <p class="mb-0">Total Members</p>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_events }}</div>
+                        <p class="mb-0">Total Events</p>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_participation }}</div>
+                        <p class="mb-0">Total Participation</p>
+                    </div>
+                    <i class="fas fa-user-check fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">
+                            {% if avg_rating %}{{ avg_rating|floatformat:1 }}{% else %}N/A{% endif %}
+                        </div>
+                        <p class="mb-0">Avg. Rating</p>
+                    </div>
+                    <i class="fas fa-star fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- Event Statistics -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2 text-primary"></i>Event Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Upcoming Events</span>
+                        <span class="badge bg-warning">{{ upcoming_events }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Completed Events</span>
+                        <span class="badge bg-success">{{ completed_events }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Participation Rate</span>
+                        <span class="badge bg-info">
+                            {% if total_members > 0 %}
+                                {{ participation_rate|floatformat:0 }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Role Distribution -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-user-tag me-2 text-success"></i>Role Distribution</h5>
+                </div>
+                <div class="card-body">
+                    {% for role in role_distribution %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>{{ role.role }}</span>
+                            <span class="badge bg-primary">{{ role.count }}</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {% if total_members > 0 %}{{ role.count|mul:100|div:total_members }}%{% else %}0%{% endif %}" 
+                                 aria-valuenow="{{ role.count }}" aria-valuemin="0" aria-valuemax="{{ total_members }}">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Department Statistics -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-building me-2 text-warning"></i>Department Statistics</h5>
+                </div>
+                <div class="card-body">
+                    {% for dept in department_stats %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>{{ dept.user__department|default:"Not Specified" }}</span>
+                            <span class="badge bg-info">{{ dept.count }}</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                 style="width: {% if total_members > 0 %}{{ dept.count|mul:100|div:total_members }}%{% else %}0%{% endif %}" 
+                                 aria-valuenow="{{ dept.count }}" aria-valuemin="0" aria-valuemax="{{ total_members }}">
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No department data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Events -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-history me-2 text-danger"></i>Recent Events</h5>
+                </div>
+                <div class="card-body">
+                    {% for event in recent_events %}
+                    <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                        <h6 class="mb-1">
+                            <a href="{% url 'events:event_detail' event.slug %}" class="text-decoration-none">
+                                {{ event.title }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ event.start_datetime|date:"M d, Y" }}
+                        </small>
+                        <br>
+                        <span class="badge bg-{{ event.status|lower }}">{{ event.get_status_display }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No events found</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Members List -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-users me-2 text-primary"></i>Club Members</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover member-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Department</th>
+                                    <th>Semester</th>
+                                    <th>Joined Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for membership in members %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if membership.user.avatar %}
+                                            <img src="{{ membership.user.avatar.url }}" alt="{{ membership.user.get_full_name }}" 
+                                                 class="rounded-circle me-2" width="30" height="30">
+                                            {% endif %}
+                                            <div>
+                                                {{ membership.user.get_full_name }}
+                                                <br>
+                                                <small class="text-muted">{{ membership.user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if membership.role == 'PRESIDENT' %}danger{% elif membership.role == 'VICE_PRESIDENT' %}warning{% elif membership.role == 'SECRETARY' %}info{% else %}secondary{% endif %}">
+                                            {{ membership.get_role_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ membership.user.department|default:"N/A" }}</td>
+                                    <td>{{ membership.user.semester|default:"N/A" }}</td>
+                                    <td>{{ membership.joined_date|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No members found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="row mt-4 mb-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'clubs:club_detail' club.slug %}" class="btn btn-primary btn-lg me-2">
+                <i class="fas fa-arrow-left me-2"></i>Back to Club
+            </a>
+            <a href="{% url 'reports:export_club_report' club.slug %}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-download me-2"></i>Export Report
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

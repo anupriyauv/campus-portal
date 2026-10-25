@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ club.name }} - Campus Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .club-header {
+        position: relative;
+        height: 300px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 0 0 30px 30px;
+        overflow: hidden;
+    }
+    
+    .club-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.3;
+    }
+    
+    .club-info-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 30px;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        color: white;
+    }
+    
+    .club-logo-container {
+        position: relative;
+        margin-top: -80px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .club-logo {
+        width: 150px;
+        height: 150px;
+        border-radius: 20px;
+        border: 5px solid white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        object-fit: cover;
+    }
+    
+    .member-card {
+        border: none;
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+    
+    .member-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .member-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .role-badge {
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 12px;
+    }
+    
+    .stats-box {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .event-card-mini {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 15px;
+        transition: transform 0.3s ease;
+    }
+    
+    .event-card-mini:hover {
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Club Header -->
+<div class="club-header">
+    {% if club.cover_image %}
+    <img src="{{ club.cover_image.url }}" alt="{{ club.name }}" class="club-cover">
+    {% endif %}
+    <div class="club-info-overlay">
+        <div class="container">
+            <h1 class="display-4 fw-bold">{{ club.name }}</h1>
+            <p class="mb-0">
+                <span class="badge bg-light text-dark me-2">{{ club.get_category_display }}</span>
+                <i class="fas fa-users me-1"></i> {{ member_count }} Members
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Club Logo -->
+    <div class="club-logo-container">
+        <img src="{% if club.logo %}{{ club.logo.url }}{% else %}{% static 'images/default-club.png' %}{% endif %}" 
+             alt="{{ club.name }}" 
+             class="club-logo">
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="text-center mb-4 d-flex justify-content-center flex-wrap">
+        {% if user.is_authenticated %}
+            {% if is_member %}
+            <button class="btn btn-success btn-lg me-2" disabled>
+                <i class="fas fa-check-circle me-2"></i>Member
+            </button>
+            <a href="{% url 'clubs:leave_club' club.slug %}" 
+               class="btn btn-outline-danger btn-lg"
+               onclick="return confirm('Are you sure you want to leave this club?')">
+                <i class="fas fa-sign-out-alt me-2"></i>Leave Club
+            </a>
+            {% else %}
+            <a href="{% url 'clubs:join_club' club.slug %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-user-plus me-2"></i>Join Club
+            </a>
+            {% endif %}
+            
+            {% if user.is_admin or is_coordinator_user %}
+            <a href="{% url 'clubs:club_update' club.slug %}" class="btn btn-outline-secondary btn-lg ms-2">
+                <i class="fas fa-edit me-2"></i>Edit Club
+            </a>
+            <a href="{% url 'reports:club_report' club.slug %}" class="btn btn-outline-info btn-lg ms-2">
+                <i class="fas fa-chart-bar me-2"></i>View Report
+            </a>
+            {% endif %}
+        {% else %}
+        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-sign-in-alt me-2"></i>Login to Join
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- About -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h3 class="mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>About Us</h3>
+                    <p class="text-muted" style="white-space: pre-line;">{{ club.description }}</p>
+                    
+                    {% if club.website or club.email %}
+                    <hr>
+                    <div class="row">
+                        {% if club.email %}
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong>
+                            <br>
+                            <a href="mailto:{{ club.email }}">{{ club.email }}</a>
+                        </div>
+                        {% endif %}
+                        {% if club.website %}
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-globe me-2 text-primary"></i>Website:</strong>
+                            <br>
+                            <a href="{{ club.website }}" target="_blank">{{ club.website }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Upcoming Events -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h3 class="mb-3"><i class="fas fa-calendar-alt me-2 text-success"></i>Upcoming Events</h3>
+                    {% for event in upcoming_events %}
+                    <div class="event-card-mini card">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="mb-2">
+                                        <a href="{% url 'events:event_detail' event.slug %}" class="text-decoration-none">
+                                            {{ event.title }}
+                                        </a>
+                                    </h5>
+                                    <p class="text-muted mb-1">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ event.start_datetime|date:"F d, Y - g:i A" }}
+                                    </p>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        {{ event.venue }}
+                                    </p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="badge bg-primary">{{ event.get_event_type_display }}</span>
+                                    <br>
+                                    <a href="{% url 'events:event_detail' event.slug %}" class="btn btn-sm btn-primary mt-2">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No upcoming events at the moment.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Members -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="mb-3"><i class="fas fa-users me-2 text-info"></i>Members</h3>
+                    <div class="row">
+                        {% for membership in members %}
+                        <div class="col-md-6 mb-3">
+                            <div class="member-card card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{% if membership.user.avatar %}{{ membership.user.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                             alt="{{ membership.user.get_full_name }}" 
+                                             class="member-avatar me-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="{% url 'accounts:public_profile' membership.user.username %}" class="text-decoration-none">
+                                                    {{ membership.user.get_full_name }}
+                                                </a>
+                                            </h6>
+                                            <small class="text-muted">{{ membership.user.department }}</small>
+                                            <br>
+                                            <span class="role-badge bg-primary text-white">
+                                                {{ membership.get_role_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Stats -->
+            <div class="stats-box">
+                <div class="stat-number">{{ member_count }}</div>
+                <p class="text-muted mb-0">Total Members</p>
+            </div>
+            
+            <div class="stats-box">
+                <div class="stat-number">{{ upcoming_events.count }}</div>
+                <p class="text-muted mb-0">Upcoming Events</p>
+            </div>
+            
+            <!-- Coordinator Info -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h5 class="mb-3">Club Coordinator</h5>
+                    <img src="{% if club.coordinator.avatar %}{{ club.coordinator.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                         alt="{{ club.coordinator.get_full_name }}" 
+                         class="rounded-circle mb-3" 
+                         width="100" 
+                         height="100">
+                    <h6>{{ club.coordinator.get_full_name }}</h6>
+                    <p class="text-muted small mb-3">{{ club.coordinator.email }}</p>
+                    <a href="mailto:{{ club.coordinator.email }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-envelope me-1"></i> Contact
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Category -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="mb-3">Category</h6>
+                    <span class="badge bg-primary p-2">{{ club.get_category_display }}</span>
+                </div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3">Quick Links</h6>
+                    <a href="{% url 'events:event_list' %}?club={{ club.id }}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-calendar me-2"></i>View All Events
+                    </a>
+                    {% if user.is_authenticated and is_member %}
+                    <a href="#" class="btn btn-outline-success w-100 mb-2">
+                        <i class="fas fa-users me-2"></i>Member Directory
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

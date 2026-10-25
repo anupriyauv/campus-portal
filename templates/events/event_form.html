@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+  {% if form.instance.pk %}Edit Event{% else %}Create Event{% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">{% if form.instance.pk %}Edit Event{% else %}Create New Event{% endif %}</h3>
+          </div>
+          <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              {{ form|crispy }}
+              <button type="submit" class="btn btn-primary">
+                {% if form.instance.pk %}Update Event{% else %}Create Event{% endif %}
+              </button>
+              <a href="{% url 'events:event_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

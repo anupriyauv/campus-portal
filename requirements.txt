@@ -1,0 +1,44 @@
+# Core Django
+Django==4.2.7
+django-environ==0.11.2
+
+# Database
+psycopg2-binary==2.9.9  # For PostgreSQL
+mysqlclient==2.2.0      # For MySQL (optional)
+
+# Forms & UI
+django-crispy-forms==2.5
+crispy-bootstrap5==2025.6
+django-widget-tweaks==1.5.0
+
+# Authentication & Security
+django-allauth==0.57.0
+
+# API (if needed)
+djangorestframework==3.14.0
+
+# File Handling
+Pillow==10.1.0
+
+# Task Queue (for async notifications)
+celery==5.3.4
+redis==5.0.1
+
+# Email
+django-anymail==10.2
+
+# Utilities
+python-decouple==3.8
+django-extensions==3.2.3
+
+# Date/Time
+python-dateutil==2.8.2
+
+# Reporting
+reportlab==4.0.7
+openpyxl==3.1.2
+
+# Development
+django-debug-toolbar==4.2.0
+
+

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}My Clubs{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2 class="mb-4">My Clubs</h2>
+
+    {% if memberships %}
+      <div class="row">
+        {% for membership in memberships %}
+          <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+              {% if membership.club.logo %}
+                <img src="{{ membership.club.logo.url }}" class="card-img-top" alt="{{ membership.club.name }} Logo">
+              {% else %}
+                <img src="/static/images/default_club_logo.png" class="card-img-top" alt="Default Club Logo">
+              {% endif %}
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ membership.club.name }}</h5>
+                <p class="card-text text-muted">Role: {{ membership.get_role_display }}</p>
+                <p class="card-text">Joined: {{ membership.joined_date|date:"M d, Y" }}</p>
+                <div class="mt-auto">
+                  <a href="{% url 'clubs:club_detail' slug=membership.club.slug %}" class="btn btn-primary btn-sm">View Club</a>
+                  <a href="{% url 'clubs:leave_club' slug=membership.club.slug %}" class="btn btn-danger btn-sm">Leave Club</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info" role="alert">
+        You haven't joined any clubs yet.
+      </div>
+      <a href="{% url 'clubs:club_list' %}" class="btn btn-primary">Browse Clubs</a>
+    {% endif %}
+  </div>
+{% endblock %}
